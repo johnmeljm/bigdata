@@ -1,0 +1,43 @@
+services:
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    restart: always
+    command: server /mnt/data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin_pwd
+    volumes:
+      - ./data/minio:/mnt/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: pgadmin
+      POSTGRES_PASSWORD: pgadmin_pwd
+      POSTGRES_DB: pgdb
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql/18/docker
+    ports:
+      - "5432:5432"
+
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    volumes:
+      - ./data/trino/catalog:/etc/trino/catalog
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+
