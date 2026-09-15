@@ -5,8 +5,8 @@ services:
     restart: always
     command: server /mnt/data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin_pwd
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - ./data/minio:/mnt/data
     ports:
@@ -19,25 +19,45 @@ services:
     restart: always
     shm_size: 128mb
     environment:
-      POSTGRES_USER: pgadmin
-      POSTGRES_PASSWORD: pgadmin_pwd
-      POSTGRES_DB: pgdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./data/pgdata:/var/lib/postgresql/18/docker
     ports:
       - "5432:5432"
 
+  jobmanager:
+    build: .
+    image: jobmanager
+    container_name: jobmanager
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+    ports:
+      - "8081:8081"
+
+  taskmanager:
+    build: .
+    image: taskmanager
+    container_name: taskmanager
+    command: taskmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4
+    depends_on:
+      - jobmanager
+
   trino:
     image: trinodb/trino:latest
     container_name: trino
     volumes:
-      - ./data/trino/catalog:/etc/trino/catalog
+      - ./trino/catalog:/etc/trino/catalog
     ports:
       - "8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
 
 
