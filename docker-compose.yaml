@@ -56,7 +56,7 @@ services:
     image: trinodb/trino:latest
     container_name: trino
     volumes:
-      - ./trino:/etc/trino
+      - ./trino/catalog:/etc/trino/catalog
     ports:
       - "8080:8080"
 
