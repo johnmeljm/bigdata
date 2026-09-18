@@ -1,7 +1,8 @@
+# docker network create bigdata
 services:
   minio:
-    image: quay.io/minio/minio:latest
     container_name: minio
+    image: quay.io/minio/minio:latest
     restart: always
     command: server /mnt/data --console-address ":9001"
     environment:
@@ -12,10 +13,12 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+    networks:
+      - bigdata
 
   postgres:
-    image: postgres
     container_name: postgres
+    image: postgres
     restart: always
     shm_size: 128mb
     environment:
@@ -26,11 +29,13 @@ services:
       - ./data/pgdata:/var/lib/postgresql/18/docker
     ports:
       - "5432:5432"
+    networks:
+      - bigdata
 
   jobmanager:
-    build: .
-    image: jobmanager
     container_name: jobmanager
+    image: jobmanager
+    build: .
     command: jobmanager
     environment:
       - |
@@ -38,11 +43,13 @@ services:
         jobmanager.rpc.address: jobmanager
     ports:
       - "8081:8081"
+    networks:
+      - bigdata
 
   taskmanager:
-    build: .
-    image: taskmanager
     container_name: taskmanager
+    image: taskmanager
+    build: .
     command: taskmanager
     environment:
       - |
@@ -51,18 +58,21 @@ services:
         taskmanager.numberOfTaskSlots: 4
     depends_on:
       - jobmanager
+    networks:
+      - bigdata
 
   trino:
-    image: trinodb/trino:latest
     container_name: trino
+    image: trinodb/trino:latest
     volumes:
       - ./trino/catalog:/etc/trino/catalog
     ports:
       - "8080:8080"
+    networks:
+      - bigdata
 
 networks:
-  default:
-    driver: bridge
-
+  bigdata:
+    external: true
 
 
