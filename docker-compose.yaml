@@ -73,6 +73,6 @@ services:
 
 networks:
   bigdata:
-    external: true
-
+    name: bigdata
+    driver: bridge
 
